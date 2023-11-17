@@ -6,6 +6,8 @@ authors = ["BlueMoonJune", "GwabbaWaba"]
 edition = "2021"
 [dependencies]
 bevy = "0.12.0"
+ron = "0.8"
+serde = { version = "1", features = ["derive"] }
 
 [workspace]
 resolver = "2"

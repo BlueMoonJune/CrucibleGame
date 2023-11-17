@@ -1,0 +1,47 @@
+SpriteFrames(
+    atlas: "betty_mercy.png"
+    states: {
+        idle: (
+            frames: [
+                Rect(
+                    x0: 1,
+                    y0: 1,
+                    x1: 25,
+                    y1: 89, 
+                ),
+                Rect(
+                    x0: 26,
+                    y0: 1,
+                    x1: 50,
+                    y1: 89,
+                ),
+            ],
+            loops = true,
+            frametime = 0.25
+        ),
+        punch: (
+            frames: [
+                Rect(
+                    x0: 217,
+                    y0: 1,
+                    x1: 241,
+                    y1: 89, 
+                ),
+            ],
+            loops = false,
+            frametime = 0.1
+        ),
+        hurt: (
+            frames: [
+                Rect(
+                    x0: 184,
+                    y0: 90,
+                    x1: 216,
+                    y1: 178, 
+                ),
+            ],
+            loops = false,
+            frametime = 0.5
+        )
+    },
+)
