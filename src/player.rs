@@ -51,8 +51,8 @@ impl Player {
     }
 }
 
-const DODGE_DISTANCE: f32 = 200.0;
-const DODGE_DURATION: f32 = 0.7;
+const DODGE_DISTANCE: f32 = 75.0;
+const DODGE_DURATION: f32 = 0.75;
 
 pub fn update_player_movement(
     time: Res<Time>,
@@ -61,32 +61,41 @@ pub fn update_player_movement(
 ) {
     for (mut player, mut transform, mut sprite) in &mut query {
         if player.dodge_timer <= 0.0 {
-            let state = player.states.idle;
-            player.animator.set_indices(state);
-            player.animator.set_frametime(0.3);
-            player.animator.loops = true;
-            player.dodge_timer = 0.0;
-            if input.pressed(KeyCode::Left) {
-                sprite.flip_x = false;
-                let state = player.states.dodge;
-                player.animator.set_indices(state);
-                player.animator.set_frametime(0.2);
-                player.animator.loops = false;
-                player.dodge_dir = DodgeDirection::Left;
-                player.dodge_timer = DODGE_DURATION;
-            }
-
-            if input.pressed(KeyCode::Right) {
-                sprite.flip_x = true;
-                let state = player.states.dodge;
-                player.animator.set_indices(state);
-                player.animator.set_frametime(0.2);
-                player.animator.loops = false;
-                player.dodge_dir = DodgeDirection::Right;
-                player.dodge_timer = DODGE_DURATION;
-            }
 
             player.blocking = input.pressed(KeyCode::Down);
+
+            if player.blocking {
+                let state = player.states.block;
+                player.animator.set_indices(state);
+                player.animator.set_frametime(0.1);
+                player.animator.loops = false;
+        
+            } else {
+                let state = player.states.idle;
+                player.animator.set_indices(state);
+                player.animator.set_frametime(0.3);
+                player.animator.loops = true;
+                player.dodge_timer = 0.0;
+                if input.just_pressed(KeyCode::Left) {
+                    sprite.flip_x = false;
+                    let state = player.states.dodge;
+                    player.animator.set_indices(state);
+                    player.animator.set_frametime(0.1);
+                    player.animator.loops = false;
+                    player.dodge_dir = DodgeDirection::Left;
+                    player.dodge_timer = DODGE_DURATION;
+                }
+
+                if input.just_pressed(KeyCode::Right) {
+                    sprite.flip_x = true;
+                    let state = player.states.dodge;
+                    player.animator.set_indices(state);
+                    player.animator.set_frametime(0.1);
+                    player.animator.loops = false;
+                    player.dodge_dir = DodgeDirection::Right;
+                    player.dodge_timer = DODGE_DURATION;
+                }
+            }
 
         } else {
             player.blocking = false;
