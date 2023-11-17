@@ -62,6 +62,7 @@ pub fn update_player_movement(
     for (mut player, mut transform, mut sprite) in &mut query {
         if player.dodge_timer <= 0.0 {
 
+            transform.translation = player.origin;
             player.blocking = input.pressed(KeyCode::Down);
 
             if player.blocking {

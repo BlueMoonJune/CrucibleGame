@@ -110,7 +110,7 @@ use std::{io::Read, str::Bytes};
 
 use bevy::{
     asset::{io::Reader, meta::Settings, AssetLoader, AsyncReadExt},
-    math::vec2,
+    math::{vec2, vec3, quat},
     prelude::*,
 };
 use player::PlayerStates;
@@ -158,43 +158,54 @@ fn setup(
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
-    let texture_handle = asset_server.load("sprites/atlases/betty_mercy.png");
-    let mut texture_atlas = TextureAtlas::new_empty(texture_handle, vec2(481.0, 178.0));
+    let betty_handle = asset_server.load("sprites/atlases/betty_mercy.png");
+    let mut betty_atlas = TextureAtlas::new_empty(betty_handle, vec2(481.0, 178.0));
+    let abigail_handle = asset_server.load("sprites/atlases/abigail.png");
+    let mut abigail_atlas = TextureAtlas::new_empty(abigail_handle, vec2(1118.0, 211.0));
 
-    texture_atlas.add_texture(AtlasUtil::from_corner_size(1., 1., 24., 88.)); // Idle
-    texture_atlas.add_texture(AtlasUtil::from_corner_size(26., 1., 24., 88.));
+    //Betty
 
-    texture_atlas.add_texture(AtlasUtil::from_corner_size(126., 1., 32., 88.)); // Punch
-    texture_atlas.add_texture(AtlasUtil::from_corner_size(159., 1., 32., 88.));
-    texture_atlas.add_texture(AtlasUtil::from_corner_size(192., 1., 24., 88.));
-    texture_atlas.add_texture(AtlasUtil::from_corner_size(217., 1., 24., 88.));
+    betty_atlas.add_texture(AtlasUtil::from_corner_size(1., 1., 24., 88.)); // Idle
+    betty_atlas.add_texture(AtlasUtil::from_corner_size(26., 1., 24., 88.));
 
-    texture_atlas.add_texture(AtlasUtil::from_corner_size(151., 90., 32., 88.)); // Hit
-    texture_atlas.add_texture(AtlasUtil::from_corner_size(184., 90., 32., 88.));
+    betty_atlas.add_texture(AtlasUtil::from_corner_size(126., 1., 32., 88.)); // Punch
+    betty_atlas.add_texture(AtlasUtil::from_corner_size(159., 1., 32., 88.));
+    betty_atlas.add_texture(AtlasUtil::from_corner_size(192., 1., 24., 88.));
+    betty_atlas.add_texture(AtlasUtil::from_corner_size(217., 1., 24., 88.));
 
-    texture_atlas.add_texture(AtlasUtil::from_corner_size(349., 90., 24., 88.)); // Block
-    texture_atlas.add_texture(AtlasUtil::from_corner_size(374., 90., 24., 88.));
+    betty_atlas.add_texture(AtlasUtil::from_corner_size(151., 90., 32., 88.)); // Hit
+    betty_atlas.add_texture(AtlasUtil::from_corner_size(184., 90., 32., 88.));
 
-    texture_atlas.add_texture(AtlasUtil::from_corner_size(51., 90., 24., 88.)); // Dodge
-    texture_atlas.add_texture(AtlasUtil::from_corner_size(76., 90., 24., 88.));
+    betty_atlas.add_texture(AtlasUtil::from_corner_size(349., 90., 24., 88.)); // Block
+    betty_atlas.add_texture(AtlasUtil::from_corner_size(374., 90., 24., 88.));
 
-    let texture_atlas_handle = texture_atlases.add(texture_atlas);
+    betty_atlas.add_texture(AtlasUtil::from_corner_size(51., 90., 24., 88.)); // Dodge
+    betty_atlas.add_texture(AtlasUtil::from_corner_size(76., 90., 24., 88.));
+
+    //Abigail
+
+    abigail_atlas.add_texture(AtlasUtil::from_corner_size(1., 1., 40., 104.));
+    abigail_atlas.add_texture(AtlasUtil::from_corner_size(42., 1., 40., 104.)); // Idle
+
+    let betty_atlas_handle = texture_atlases.add(betty_atlas);
+    let abigail_atlas_handle = texture_atlases.add(abigail_atlas);
     // Use only the subset of sprites in the sheet that make up the run animation
     let animation_indices = AnimationIndices { first: 0, last: 1 };
-    let sprite = TextureAtlasSprite::new(animation_indices.first);
+    let betty_sprite = TextureAtlasSprite::new(animation_indices.first);
+    let abigail_sprite = TextureAtlasSprite::new(0);
     commands.spawn(Camera2dBundle::default());
     commands.spawn((
         SpriteSheetBundle {
-            texture_atlas: texture_atlas_handle,
-            sprite: sprite,
+            texture_atlas: betty_atlas_handle,
+            sprite: betty_sprite,
             transform: Transform::from_scale(Vec3::splat(2.0)),
             ..default()
         },
         player::Player::new(
             Vec3 {
                 x: 0.0,
-                y: 0.0,
-                z: 0.0,
+                y: -100.0,
+                z: 1.0,
             },
             Animator::new(
                 AnimationTimer(Timer::from_seconds(0.25, TimerMode::Repeating)),
@@ -209,5 +220,20 @@ fn setup(
                 dodge: AnimationIndices { first: 10, last: 11 },
             },
         )
+    ));
+    commands.spawn((
+        SpriteBundle {
+            texture: asset_server.load("sprites/stage.png"),
+            transform: Transform { translation: vec3(0.0, 0.0, -1.0), rotation: quat(0.0, 0.0, 0.0, 1.0), scale: Vec3::splat(2.0) },
+            ..default()
+        }
+    ));
+    commands.spawn((
+        SpriteSheetBundle {
+            texture_atlas: abigail_atlas_handle,
+            sprite: abigail_sprite,
+            transform: Transform { translation: vec3(0.0, 0.0, 0.0), rotation: quat(0.0, 0.0, 0.0, 1.0), scale: Vec3::splat(2.0) },
+            ..default()
+        }
     ));
 }
