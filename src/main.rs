@@ -20,7 +20,7 @@ struct SpriteStateTest {
 }
 
 impl SpriteStateTest {
-    
+
 }
 
 
@@ -108,117 +108,30 @@ fn idle_movement(time: Res<Time>, mut sprite_position: Query<(&mut IdleInfo, &mu
 
 use std::{io::Read, str::Bytes};
 
-use bevy::{prelude::*, asset::{AssetLoader, meta::Settings, io::Reader, AsyncReadExt}};
-use ron::{Map, error::SpannedError};
-use serde::{Serialize, Deserializer, de::{Visitor, self}, Deserialize};
+use bevy::{
+    asset::{io::Reader, meta::Settings, AssetLoader, AsyncReadExt},
+    math::vec2,
+    prelude::*,
+};
+use player::PlayerStates;
+use ron::{error::SpannedError, Map};
+use serde::{
+    de::{self, Visitor},
+    Deserialize, Deserializer, Serialize,
+};
+use util::*;
+
+mod player;
+mod util;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest())) // prevents blurry sprites
         .add_systems(Startup, setup)
         .add_systems(Update, animate_sprite)
-        .register_asset_loader(SpriteFramesLoader)
-        .init_asset_loader::<SpriteFramesLoader>()
+        .add_systems(Update, player::update_player_movement)
         .run();
 }
-
-/*
-struct StringVisitor;
-
-impl<'de> Visitor<'de> for StringVisitor {
-    type Value = String;
-
-    fn visit_string<E>(self, value: String) -> Result<Self::Value, E> where E: de::Error, {
-        Ok(String::from(value))
-    }
-
-    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-        formatter.write_str("string.")
-    }
-}
-*/
-
-#[derive(Deserialize)]
-struct SpriteState<> {
-    frames: Vec<Rect>,
-    loops: bool,
-    frametime: f32
-}
-
-#[derive(Asset, Deserialize, TypePath)]
-pub struct SpriteFrames<> {
-    atlas: String,
-    #[serde(skip)]
-    atlas_handle: Handle<TextureAtlas>,
-    states: Map,
-}
-
-#[derive(Default)]
-pub struct SpriteFramesLoader;
-
-impl AssetLoader for SpriteFramesLoader {
-    type Asset = SpriteFrames;
-    
-    type Settings = bool;
-
-    type Error = SpannedError;
-
-    fn extensions(&self) -> &[&str] {
-        &["spriteframes.ron"]
-    }
-
-    fn load<'a>(
-        &'a self,
-        reader: &'a mut Reader,
-        settings: &'a Self::Settings,
-        load_context: &'a mut bevy::asset::LoadContext,
-    ) -> bevy::utils::BoxedFuture<'a, Result<Self::Asset, Self::Error>> {
-        Box::pin(async move {
-            let mut buf : Vec<u8> = vec![];
-            reader.read_to_end(&mut buf);
-            let serialized = ron::de::from_bytes::<'_, SpriteFrames>(&buf);
-            serialized
-        })
-    }
-}
-
-fn finalize_atlases(
-    mut asset_events: EventReader<AssetEvent<SpriteFrames>>,
-    mut sprite_frames: ResMut<Assets<SpriteFrames>>
-) {
-    for event in asset_events.iter() {
-        match event {
-            AssetEvent::Added { id } => {
-                let frames = sprite_frames.get_mut(*id).unwrap();
-            },
-            _ => {}
-        }
-    }
-}
-
-/*
-pub trait Deserialize<'de>: Sized {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>;
-}
-
-impl Deserialize<'static> for SpriteFrames<'static> {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer<'static> {
-        deserializer.deserialize_string(StringVisitor);
-        todo!()
-    }
-}
-*/
-
-#[derive(Component)]
-struct AnimationIndices {
-    first: usize,
-    last: usize,
-}
-
-#[derive(Component, Deref, DerefMut)]
-struct AnimationTimer(Timer);
 
 fn animate_sprite(
     time: Res<Time>,
@@ -245,25 +158,56 @@ fn setup(
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
-    
-    
-    /*
-    let texture_handle = asset_server.load("sprites/atlases/abigail.png");
-    let texture_atlas =
-        TextureAtlas::from_grid(texture_handle, Vec2::new(40.0, 96.0), 2, 1, Some(Vec2::new(1., 1.)), Some(Vec2::new(1., 1.)));
+    let texture_handle = asset_server.load("sprites/atlases/betty_mercy.png");
+    let mut texture_atlas = TextureAtlas::new_empty(texture_handle, vec2(481.0, 178.0));
+
+    texture_atlas.add_texture(AtlasUtil::from_corner_size(1., 1., 24., 88.)); // Idle
+    texture_atlas.add_texture(AtlasUtil::from_corner_size(26., 1., 24., 88.));
+
+    texture_atlas.add_texture(AtlasUtil::from_corner_size(126., 1., 32., 88.)); // Punch
+    texture_atlas.add_texture(AtlasUtil::from_corner_size(159., 1., 32., 88.));
+    texture_atlas.add_texture(AtlasUtil::from_corner_size(192., 1., 24., 88.));
+    texture_atlas.add_texture(AtlasUtil::from_corner_size(217., 1., 24., 88.));
+
+    texture_atlas.add_texture(AtlasUtil::from_corner_size(151., 90., 32., 88.)); // Hit
+    texture_atlas.add_texture(AtlasUtil::from_corner_size(184., 90., 32., 88.));
+
+    texture_atlas.add_texture(AtlasUtil::from_corner_size(349., 90., 24., 88.)); // Block
+    texture_atlas.add_texture(AtlasUtil::from_corner_size(374., 90., 24., 88.));
+
+    texture_atlas.add_texture(AtlasUtil::from_corner_size(51., 90., 24., 88.)); // Dodge
+    texture_atlas.add_texture(AtlasUtil::from_corner_size(76., 90., 24., 88.));
+
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
     // Use only the subset of sprites in the sheet that make up the run animation
     let animation_indices = AnimationIndices { first: 0, last: 1 };
+    let sprite = TextureAtlasSprite::new(animation_indices.first);
     commands.spawn(Camera2dBundle::default());
     commands.spawn((
         SpriteSheetBundle {
             texture_atlas: texture_atlas_handle,
-            sprite: TextureAtlasSprite::new(animation_indices.first),
+            sprite: sprite,
             transform: Transform::from_scale(Vec3::splat(6.0)),
             ..default()
         },
-        animation_indices,
-        AnimationTimer(Timer::from_seconds(0.25, TimerMode::Repeating)),
+        player::Player::new(
+            Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            Animator::new(
+                AnimationTimer(Timer::from_seconds(0.25, TimerMode::Repeating)),
+                AnimationIndices { first: 0, last: 1 },
+                true,
+            ),
+            PlayerStates {
+                idle: AnimationIndices { first: 0, last: 1 },
+                punch: AnimationIndices { first: 2, last: 5 },
+                hit: AnimationIndices { first: 6, last: 7 },
+                block: AnimationIndices { first: 8, last: 9 },
+                dodge: AnimationIndices { first: 10, last: 11 },
+            },
+        )
     ));
-    */
 }
