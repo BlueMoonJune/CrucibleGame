@@ -1,108 +1,3 @@
-/*
-use bevy::{prelude::*, transform::commands, reflect::Enum};
-
-fn main() {
-    App::new()
-        .add_plugins(DefaultPlugins)
-        .add_systems(Startup, setup)
-        .add_systems(Update, idle_movement)
-        .run();
-}
-
-#[derive(Component)]
-struct SpriteState {
-    atlas: TextureAtlas,
-}
-
-#[derive(Component)]
-struct SpriteStateTest {
-
-}
-
-impl SpriteStateTest {
-
-}
-
-
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn(Camera2dBundle::default());
-    // Background
-    commands.spawn((
-        SpriteBundle {
-            texture: asset_server.load("sprites/atlases/stages.png"),
-            transform: Transform::from_xyz(0., 0., 0.),
-            ..default()
-        },
-    ));
-    // Abby
-    commands.spawn((
-        SpriteBundle {
-            texture: asset_server.load("sprites/atlases/abigail.png"),
-            transform: Transform {
-                translation: Vec3::new(0., 225., 1.),
-                rotation: Quat::from_euler(EulerRot::ZYX, 0., 0., 0.),
-                scale: Vec3::new(4., 4., 4.),
-            },
-            ..default()
-        },
-        IdleInfo {
-            direction: (IdleDirection::Vertical, 1),
-            bounds: (200., 250.),
-            speed: 300.,
-        },
-    ));
-    // Betty
-    commands.spawn((
-        SpriteBundle {
-            texture: asset_server.load("sprites/atlases/betty_mercy.png"),
-            transform: Transform {
-                translation: Vec3::new(0., -100., 2.),
-                rotation: Quat::from_euler(EulerRot::ZYX, 0., 0., 0.),
-                scale: Vec3::new(4., 4., 4.),
-            },
-            ..default()
-        },
-        IdleInfo {
-            direction: (IdleDirection::Horizontal, 1),
-            bounds: (-30., 30.),
-            speed: 150.,
-        },
-    ));
-}
-
-
-/// The sprite is animated by changing its translation depending on the time that has passed since
-/// the last frame.
-fn idle_movement(time: Res<Time>, mut sprite_position: Query<(&mut IdleInfo, &mut Transform)>) {
-    for (mut anim_info, mut transform) in &mut sprite_position {
-        match anim_info.direction.0 {
-            IdleDirection::Vertical => {
-                transform.translation.y += anim_info.speed * (anim_info.direction.1 as f32) * time.delta_seconds();
-
-                if transform.translation.y < anim_info.bounds.0 {
-                    transform.translation.y = anim_info.bounds.0;
-                    anim_info.direction.1 *= -1;
-                } else if transform.translation.y > anim_info.bounds.1 {
-                    transform.translation.y = anim_info.bounds.1;
-                    anim_info.direction.1 *= -1;
-                }
-            },
-            IdleDirection::Horizontal => {
-                transform.translation.x += anim_info.speed * (anim_info.direction.1 as f32) * time.delta_seconds();
-
-                if transform.translation.x < anim_info.bounds.0 {
-                    transform.translation.x = anim_info.bounds.0;
-                    anim_info.direction.1 *= -1;
-                } else if transform.translation.x > anim_info.bounds.1 {
-                    transform.translation.x = anim_info.bounds.1;
-                    anim_info.direction.1 *= -1;
-                }
-            },
-        }
-    }
-}
-*/
-
 //! Renders an animated sprite by loading all animation frames from a single image (a sprite sheet)
 //! into a texture atlas, and changing the displayed image periodically.
 
@@ -113,6 +8,7 @@ use bevy::{
     math::{vec2, vec3, quat},
     prelude::*,
 };
+use enemy::EnemyStates;
 use player::PlayerStates;
 use ron::{error::SpannedError, Map};
 use serde::{
@@ -122,6 +18,7 @@ use serde::{
 use util::*;
 
 mod player;
+mod enemy;
 mod util;
 
 fn main() {
@@ -130,6 +27,7 @@ fn main() {
         .add_systems(Startup, setup)
         .add_systems(Update, animate_sprite)
         .add_systems(Update, player::update_player_movement)
+        .add_systems(Update, enemy::update_enemy_movement)
         .run();
 }
 
@@ -184,8 +82,18 @@ fn setup(
 
     //Abigail
 
-    abigail_atlas.add_texture(AtlasUtil::from_corner_size(1., 1., 40., 104.));
-    abigail_atlas.add_texture(AtlasUtil::from_corner_size(42., 1., 40., 104.)); // Idle
+    abigail_atlas.add_texture(AtlasUtil::from_corner_size(1., 1., 40., 104.)); // Idle
+    abigail_atlas.add_texture(AtlasUtil::from_corner_size(42., 1., 40., 104.)); 
+
+    abigail_atlas.add_texture(AtlasUtil::from_corner_size(329., 1., 32., 104.)); // Punch
+    abigail_atlas.add_texture(AtlasUtil::from_corner_size(370., 1., 32., 104.));
+    abigail_atlas.add_texture(AtlasUtil::from_corner_size(1., 106., 40., 104.));
+
+    abigail_atlas.add_texture(AtlasUtil::from_corner_size(272., 106., 40., 104.)); // Hit
+
+    abigail_atlas.add_texture(AtlasUtil::from_corner_size(91., 106., 32., 104.)); // Block
+
+
 
     let betty_atlas_handle = texture_atlases.add(betty_atlas);
     let abigail_atlas_handle = texture_atlases.add(abigail_atlas);
@@ -204,7 +112,7 @@ fn setup(
         player::Player::new(
             Vec3 {
                 x: 0.0,
-                y: -100.0,
+                y: -80.0,
                 z: 1.0,
             },
             Animator::new(
@@ -234,6 +142,25 @@ fn setup(
             sprite: abigail_sprite,
             transform: Transform { translation: vec3(0.0, 0.0, 0.0), rotation: quat(0.0, 0.0, 0.0, 1.0), scale: Vec3::splat(2.0) },
             ..default()
-        }
+        },
+        enemy::Enemy::new(
+            Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            Animator::new(
+                AnimationTimer(Timer::from_seconds(0.25, TimerMode::Repeating)),
+                AnimationIndices { first: 0, last: 1 },
+                true,
+            ),
+            EnemyStates {
+                idle: AnimationIndices { first: 0, last: 1 },
+                punch_warning: AnimationIndices { first: 2, last: 3},
+                punch: AnimationIndices { first: 4, last: 4 },
+                hit: AnimationIndices { first: 5, last: 5 },
+                block: AnimationIndices { first: 6, last: 6 },
+            },
+        )
     ));
 }

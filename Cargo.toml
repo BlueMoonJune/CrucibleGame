@@ -8,6 +8,7 @@ edition = "2021"
 bevy = { version = "0.12.0", features = ["dynamic_linking"] }
 ron = "0.8"
 serde = { version = "1", features = ["derive"] }
+rand = "0.8.5"
 
 [workspace]
 resolver = "2"
