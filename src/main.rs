@@ -170,20 +170,22 @@ fn setup(
         Text2dBundle {
             text: Text::from_section(
                 "00",
-            TextStyle { font: asset_server.load("fonts/font.ttf"), font_size: 16.0, color: Color::WHITE }
+            TextStyle { font: asset_server.load("fonts/font.ttf"), font_size: 16.0, color: Color::hex("FC9838").expect("wtf") }
             ).with_alignment(TextAlignment::Right),
             transform: Transform::from_translation(Vec3 { x: -128.0, y: 182.0, z: 0.0 }),
             ..default()
-        }
+        },
+        HeartText {}
     ));
     commands.spawn((
         Text2dBundle {
             text: Text::from_section(
                 "00",
-            TextStyle { font: asset_server.load("fonts/font.ttf"), font_size: 16.0, color: Color::WHITE }
+            TextStyle { font: asset_server.load("fonts/font.ttf"), font_size: 16.0, color: Color::hex("D82800").expect("wtf") }
             ).with_alignment(TextAlignment::Right),
-            transform: Transform::from_translation(Vec3 { x: -126.0, y: 182.0, z: 0.0 }),
+            transform: Transform::from_translation(Vec3 { x: -126.0, y: 182.0, z: -0.1 }),
             ..default()
-        }
+        },
+        HeartText {}
     ));
 }
