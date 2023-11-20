@@ -21,6 +21,9 @@ mod player;
 mod enemy;
 mod util;
 
+#[derive(Component)]
+struct HeartText;
+
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest())) // prevents blurry sprites
@@ -162,5 +165,25 @@ fn setup(
                 block: AnimationIndices { first: 6, last: 6 },
             },
         )
+    ));
+    commands.spawn((
+        Text2dBundle {
+            text: Text::from_section(
+                "00",
+            TextStyle { font: asset_server.load("fonts/font.ttf"), font_size: 16.0, color: Color::WHITE }
+            ).with_alignment(TextAlignment::Right),
+            transform: Transform::from_translation(Vec3 { x: -128.0, y: 182.0, z: 0.0 }),
+            ..default()
+        }
+    ));
+    commands.spawn((
+        Text2dBundle {
+            text: Text::from_section(
+                "00",
+            TextStyle { font: asset_server.load("fonts/font.ttf"), font_size: 16.0, color: Color::WHITE }
+            ).with_alignment(TextAlignment::Right),
+            transform: Transform::from_translation(Vec3 { x: -126.0, y: 182.0, z: 0.0 }),
+            ..default()
+        }
     ));
 }
