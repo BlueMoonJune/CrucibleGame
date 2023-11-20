@@ -31,6 +31,8 @@ pub struct Player {
     animator: Animator,
     is_hit_timer: f32,
     hits_taken_total: i32,
+    heart : u32,
+    health : u32
 }
 
 pub struct PlayerStates {
@@ -54,6 +56,8 @@ impl Player {
             origin: origin,
             animator: animator,
             hits_taken_total: 0,
+            heart: 20,
+            health: 100,
         }
     }
 }
@@ -61,7 +65,7 @@ impl Player {
 const DODGE_DISTANCE: f32 = 75.0;
 const DODGE_DURATION: f32 = 0.75;
 pub const PUNCH_DURATION: f32 = 0.5;
-const IS_HIT_TIMER: f32 = 0.1;
+const IS_HIT_TIMER: f32 = 0.5;
 
 pub fn update_player_movement(
     time: Res<Time>,
@@ -71,15 +75,17 @@ pub fn update_player_movement(
 ) {
     'player_loop: for (mut player, mut transform, mut sprite) in &mut player_query {
         for enemy in &enemy_query {
-            if player.hits_taken_total > 15 {
+            if player.hits_taken_total > 5 {
                 let state = player.states.death;
                 player.animator.set_indices(state);
                 player.animator.set_frametime(0.1);
                 player.animator.loops = false;
+                sprite.index = player.animator.index;
+                player.animator.tick(time.delta()); 
                 break 'player_loop;
             }
             if enemy.punch_timer < enemy::PUNCH_DURATION && enemy.punch_timer >= 0. {
-                if !player.blocking && player.dodge_timer == 0. {
+                if !player.blocking && player.dodge_timer == 0. && player.is_hit_timer <= 0. {
                     let state = player.states.hit;
                     player.animator.set_indices(state);
                     player.animator.set_frametime(0.1);

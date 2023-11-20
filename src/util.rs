@@ -47,16 +47,11 @@ impl Animator {
         if self.timer.just_finished() {
             if self.index == self.indices.last {
                 if self.loops {
-                    println!("Loop");
                     self.index = self.indices.first
-                } else {
-                    println!("End");
                 }
             } else {
-                println!("Step");
                 self.index += 1;
             };
-            println!("Sprite Index: {}, Loops: {}, First: {}", self.index, self.loops, self.indices.first);
         }
     }
 

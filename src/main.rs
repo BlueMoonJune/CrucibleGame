@@ -105,6 +105,8 @@ fn setup(
 
     abigail_atlas.add_texture(AtlasUtil::from_corner_size(91., 106., 32., 104.)); // Block
 
+    abigail_atlas.add_texture(AtlasUtil::from_corner_size(418., 106., 54., 104.)); // Death
+
 
 
     let betty_atlas_handle = texture_atlases.add(betty_atlas);
@@ -173,6 +175,7 @@ fn setup(
                 punch: AnimationIndices { first: 4, last: 4 },
                 hit: AnimationIndices { first: 5, last: 5 },
                 block: AnimationIndices { first: 6, last: 6 },
+                death: AnimationIndices { first: 7, last: 7 }
             },
         )
     ));

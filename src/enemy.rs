@@ -43,6 +43,7 @@ pub struct EnemyStates {
     pub punch: AnimationIndices,
     pub hit: AnimationIndices,
     pub block: AnimationIndices,
+    pub death: AnimationIndices
 }
 
 impl Enemy {
@@ -50,7 +51,7 @@ impl Enemy {
         Enemy {
             states: states,
             action_dir: ActionDirection::None,
-            punch_timer: 0.0,
+            punch_timer: PUNCH_DURATION,
             block_timer: 0.0,
             is_hit_timer: 0.0,
             wait_timer: 0.0,
@@ -65,7 +66,7 @@ impl Enemy {
 const BLOCK_DURATION: f32 = 0.75;
 const PUNCH_WARNING_DURATION: f32 = 1.0;
 pub const PUNCH_DURATION: f32 = 0.5;
-pub const IS_HIT_TIMER: f32 = 0.05;
+pub const IS_HIT_TIMER: f32 = 0.5;
 
 pub fn update_enemy_movement(
     time: Res<Time>,
@@ -76,8 +77,19 @@ pub fn update_enemy_movement(
     'enemy_loop: for (mut enemy, mut transform, mut sprite) in &mut enemy_query {
 
         for player in &player_query {
+
+            if enemy.hits_taken_total > 15 {
+                let state = enemy.states.death;
+                enemy.animator.set_indices(state);
+                enemy.animator.set_frametime(0.1);
+                enemy.animator.loops = false;
+                sprite.index = enemy.animator.index;
+                enemy.animator.tick(time.delta()); 
+                break 'enemy_loop;
+            }
+
             if player::PUNCH_DURATION - player.punch_timer < player::PUNCH_DURATION / 4. && player.punch_timer >= 0. && enemy.hits_taken < 2 {
-                if enemy.block_timer == 0. {
+                if enemy.block_timer == 0. && enemy.is_hit_timer <= 0. {
                     let state = enemy.states.hit;
                     enemy.animator.set_indices(state);
                     enemy.animator.set_frametime(0.1);
