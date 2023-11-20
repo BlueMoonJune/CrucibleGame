@@ -8,7 +8,7 @@ use bevy::{
     math::{vec2, vec3, quat},
     prelude::*,
 };
-use enemy::EnemyStates;
+use enemy::{EnemyStates, Enemy};
 use player::PlayerStates;
 use ron::{error::SpannedError, Map};
 use serde::{
@@ -23,6 +23,13 @@ mod util;
 
 #[derive(Component)]
 struct HeartText;
+
+#[derive(Resource)]
+struct Entities {
+    player: Entity,
+    enemy: Enemy,
+    heartText: HeartText
+}
 
 fn main() {
     App::new()
@@ -83,6 +90,8 @@ fn setup(
     betty_atlas.add_texture(AtlasUtil::from_corner_size(51., 90., 24., 88.)); // Dodge
     betty_atlas.add_texture(AtlasUtil::from_corner_size(76., 90., 24., 88.));
 
+    betty_atlas.add_texture(AtlasUtil::from_corner_size(217., 90., 32., 88.)); // Death
+
     //Abigail
 
     abigail_atlas.add_texture(AtlasUtil::from_corner_size(1., 1., 40., 104.)); // Idle
@@ -129,6 +138,7 @@ fn setup(
                 hit: AnimationIndices { first: 6, last: 7 },
                 block: AnimationIndices { first: 8, last: 9 },
                 dodge: AnimationIndices { first: 10, last: 11 },
+                death: AnimationIndices { first: 12, last: 12 }
             },
         )
     ));
